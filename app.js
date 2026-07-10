@@ -395,19 +395,12 @@ function renderDonut(groupData, totalAssets) {
     dom.donutLegend.innerHTML = "";
     return;
   }
+  const dominant = visible[0];
   const radius = 70;
   const circumference = 2 * Math.PI * radius;
-  const separator = 2.4;
-  let offset = 0;
-  const segments = visible.map((item) => {
-    const length = Math.min(1, item.ratio / 100) * circumference;
-    const visibleLength = Math.max(1, length - separator);
-    const color = researchColors[item.key];
-    const segment = `<circle class="wealth-ring-segment" cx="100" cy="100" r="${radius}" stroke="${color}" stroke-dasharray="${visibleLength} ${circumference - visibleLength}" stroke-dashoffset="${-(offset + separator / 2)}"/>`;
-    offset += length;
-    return segment;
-  }).join("");
-  dom.donutChart.innerHTML = `<svg viewBox="0 0 200 200" role="img" aria-label="财富构成圆环图"><circle class="wealth-ring-base" cx="100" cy="100" r="${radius}"/><g transform="rotate(-90 100 100)">${segments}</g><circle class="wealth-ring-center" cx="100" cy="100" r="54"/><text x="100" y="95" text-anchor="middle" class="donut-caption">可配置资产</text><text x="100" y="113" text-anchor="middle" class="donut-value">${formatCompactMoney(totalAssets)}</text></svg>`;
+  const progressLength = Math.min(1, dominant.ratio / 100) * circumference;
+  const dominantColor = researchColors[dominant.key];
+  dom.donutChart.innerHTML = `<svg viewBox="0 0 200 200" role="img" aria-label="最大资产占比圆环图" style="--ring-color:${dominantColor}"><circle class="wealth-ring-base" cx="100" cy="100" r="${radius}"/><circle class="wealth-ring-progress" cx="100" cy="100" r="${radius}" stroke-dasharray="${progressLength} ${circumference - progressLength}" transform="rotate(-90 100 100)"/><circle class="wealth-ring-center" cx="100" cy="100" r="54"/><text x="100" y="88" text-anchor="middle" class="donut-caption">${dominant.meta.name}</text><text x="100" y="112" text-anchor="middle" class="donut-value">${percentFormatter.format(dominant.ratio)}%</text><text x="100" y="128" text-anchor="middle" class="donut-subtitle">占可配置资产</text></svg>`;
   dom.donutLegend.innerHTML = visible.map((item) => `<div class="legend-row" style="--legend-color:${researchColors[item.key]}"><i></i><span class="legend-copy"><strong>${item.meta.name}</strong><small data-money>${formatMoney(item.value)}</small></span><b>${percentFormatter.format(item.ratio)}%</b></div>`).join("");
 }
 
