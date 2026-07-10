@@ -301,7 +301,7 @@ input:focus, select:focus { border-color: var(--note-5); box-shadow: 0 0 0 3px r
   .note-colors { height: 2px; }
   .main-content { width: calc(100% - 16px); margin: 14px auto 104px; }
   .mobile-nav { position: fixed; right: 10px; bottom: max(8px, env(safe-area-inset-bottom)); left: 10px; z-index: 40; display: grid; grid-template-columns: repeat(4, 1fr); min-height: 64px; padding: 5px 6px; background: rgba(246,247,249,.72); border: 1px solid rgba(255,255,255,.86); border-radius: 20px; box-shadow: inset 0 1px 0 rgba(255,255,255,.92), 0 12px 32px rgba(35,38,45,.16), 0 2px 8px rgba(35,38,45,.08); backdrop-filter: blur(22px) saturate(180%); -webkit-backdrop-filter: blur(22px) saturate(180%); }
-  .mobile-nav .nav-button { display: grid; gap: 3px; min-height: 52px; padding: 0; color: #68707d; background: transparent; border: 1px solid transparent; border-radius: 15px; font-size: 9px; transition: color .18s ease, background-color .18s ease, border-color .18s ease, transform .12s ease; }
+  .mobile-nav .nav-button { display: grid; gap: 3px; min-height: 52px; padding: 0; color: #68707d; background: transparent; border: 1px solid transparent; border-radius: 15px; font-size: 10px; transition: color .18s ease, background-color .18s ease, border-color .18s ease, transform .12s ease; }
   .mobile-nav .nav-button svg { width: 19px; height: 19px; stroke-width: 1.9; }
   .mobile-nav .nav-button:hover { background: rgba(255,255,255,.35); }
   .mobile-nav .nav-button:active { transform: scale(.96); }
@@ -313,31 +313,45 @@ input:focus, select:focus { border-color: var(--note-5); box-shadow: 0 0 0 3px r
   .worth-hero { grid-template-columns: 1fr; min-height: 0; }
   .hero-main { padding: 22px 20px 24px; border-right: 0; }
   .hero-main::after { right: 8px; font-size: 98px; }
-  .worth-label { margin-top: 27px; }
+  .hero-topline { font-size: 12px; }
+  .worth-label { margin-top: 27px; font-size: 14px; }
+  .hero-change { font-size: 12px; }
+  .hero-change strong { font-size: 15px; }
   .worth-number { font-size: clamp(37px, 11vw, 50px); }
-  .record-main-button { width: 100%; margin-top: 24px; }
+  .record-main-button { width: 100%; margin-top: 24px; font-size: 13px; }
   .hero-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: 1fr; }
   .summary-item { padding: 16px 10px 15px 15px; border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
   .summary-item:first-child { border-top: 1px solid var(--line); border-left: 0; }
   .summary-item::before { top: 13px; bottom: 13px; width: 4px; }
-  .summary-item span { font-size: 9px; }
-  .summary-item strong { font-size: 13px; }
-  .summary-item small { overflow: hidden; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+  .summary-item span { font-size: 10px; }
+  .summary-item strong { font-size: 14px; }
+  .summary-item small { overflow: hidden; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
   .overview-grid { gap: 10px; margin-top: 10px; }
   .panel { padding: 16px; }
   .panel-head { margin-bottom: 15px; }
+  .panel-head h2 { font-size: 17px; }
+  .panel-head > span { font-size: 11px; }
+  .panel-kicker, .page-kicker { font-size: 10px; }
   .map-item { min-height: 96px; padding: 12px; }
-  .map-bottom strong { font-size: 15px; }
+  .map-top span { font-size: 12px; }
+  .map-top em { font-size: 11px; }
+  .map-bottom strong { font-size: 16px; }
+  .map-bottom small { font-size: 10px; }
+  .debt-band span { font-size: 12px; }
+  .debt-band span small { font-size: 10px; }
   .changes-panel { margin-top: 10px; }
   .change-list { grid-template-columns: 1fr; }
   .page-head { align-items: flex-start; margin: 4px 4px 18px; }
-  .page-head h1 { font-size: 22px; }
+  .page-head h1 { font-size: 23px; }
+  .page-head p:not(.page-kicker) { font-size: 12px; }
   .page-actions { display: none; }
   .page-head > .primary-button { display: none; }
   .record-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .analysis-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .analysis-metric { padding: 14px; }
   .analysis-metric strong { font-size: 16px; }
+  .analysis-metric span { font-size: 10px; }
+  .analysis-metric small { font-size: 9px; }
   .analysis-visuals, .analysis-bottom { grid-template-columns: 1fr; gap: 10px; }
   .donut-layout { grid-template-columns: minmax(150px, .9fr) minmax(130px, 1fr); min-height: 230px; }
   .category-bars { min-height: 230px; }
@@ -346,13 +360,32 @@ input:focus, select:focus { border-color: var(--note-5); box-shadow: 0 0 0 3px r
   .research-panel, .analysis-bottom { margin-top: 10px; }
   .record-stat { padding: 14px; }
   .record-stat strong { font-size: 16px; }
+  .record-stat span, .record-stat small { font-size: 10px; }
   .record-row { grid-template-columns: 66px minmax(0, 1fr) minmax(85px, auto) 16px; gap: 9px; min-height: 68px; padding: 0 14px; }
   .record-row .record-bar { display: none; }
   .record-worth strong { font-size: 14px; }
-  .record-change { font-size: 10px; }
+  .record-worth span, .record-date span { font-size: 10px; }
+  .record-change { font-size: 11px; }
   .account-grid { grid-template-columns: 1fr; gap: 9px; }
   .account-filter { margin-right: -8px; margin-left: -8px; padding: 0 8px 4px; }
+  .account-filter button { font-size: 11px; }
+  .account-copy strong { font-size: 13px; }
+  .account-copy span, .account-meta { font-size: 10px; }
+  .account-kind { font-size: 9px; }
+  .change-item span { font-size: 12px; }
+  .change-item small { font-size: 10px; }
+  .legend-row { font-size: 11px; }
+  .bar-value, .bar-column strong { font-size: 10px; }
+  .bar-column small { font-size: 9px; }
+  .research-table { min-width: 900px; }
+  .research-row { font-size: 11px; }
+  .research-row.is-header { font-size: 10px; }
+  .narrative-title strong { font-size: 12px; }
+  .narrative-title em, .debt-rule, .debt-row em { font-size: 9px; }
+  .narrative-item p, .debt-row div strong { font-size: 10px; }
+  .debt-row div small, .analysis-note { font-size: 9px; }
   .modal form { padding: 18px 15px; }
+  label { font-size: 11px; }
   .record-form-row { grid-template-columns: minmax(0, 1fr) 130px; gap: 8px; padding: 8px 9px; }
   .date-field { width: 100%; }
   .toast { right: 10px; bottom: 78px; left: 10px; max-width: none; text-align: center; }
