@@ -10,6 +10,14 @@ const groups = {
   debt: { name: "全部负债", color: "#82333e", soft: "#f8e9eb", mark: "−" },
 };
 
+const researchColors = {
+  liquid: "#18aaa2",
+  investment: "#45b86b",
+  longterm: "#f0a13a",
+  reserve: "#7869e8",
+  other: "#e85d78",
+};
+
 const typeCatalog = [
   { id: "wechat", name: "微信 / 零钱通", short: "微信", kind: "asset", group: "liquid", icon: "微" },
   { id: "alipay", name: "支付宝 / 余额宝", short: "支付宝", kind: "asset", group: "liquid", icon: "支" },
@@ -353,10 +361,10 @@ function renderAnalysis(year, summary) {
   dom.analysisDate.textContent = summary.latestDate ? `基于 ${formatDate(summary.latestDate, true)} 档案 · ${state.accounts.length} 个账户` : "尚无可研究的档案数据";
   dom.analysisTableMeta.textContent = summary.latestDate ? `截至 ${formatDate(summary.latestDate)}` : "当前档案";
   dom.analysisMetrics.innerHTML = [
-    { label: "财富净值", value: formatMoney(summary.net), note: `${year} 年度口径`, color: "#a83f4b", money: true },
-    { label: "灵活资金占比", value: `${percentFormatter.format(liquidRatio)}%`, note: "微信、支付宝、存款与现金", color: "#477c79" },
-    { label: "投资资产占比", value: `${percentFormatter.format(investmentRatio)}%`, note: "股票、基金、债券与数字资产", color: "#4d7c62" },
-    { label: "负债占比", value: `${percentFormatter.format(debtRatio)}%`, note: "负债余额 ÷ 财富总额", color: "#6d5b85" },
+    { label: "财富净值", value: formatMoney(summary.net), note: `${year} 年度口径`, color: "#e04f67", money: true },
+    { label: "灵活资金占比", value: `${percentFormatter.format(liquidRatio)}%`, note: "微信、支付宝、存款与现金", color: researchColors.liquid },
+    { label: "投资资产占比", value: `${percentFormatter.format(investmentRatio)}%`, note: "股票、基金、债券与数字资产", color: researchColors.investment },
+    { label: "负债占比", value: `${percentFormatter.format(debtRatio)}%`, note: "负债余额 ÷ 财富总额", color: researchColors.reserve },
   ].map((item) => `<article class="analysis-metric" style="--metric-color:${item.color}"><span>${item.label}</span><strong ${item.money ? "data-money" : ""}>${item.value}</strong><small>${item.note}</small></article>`).join("");
 
   renderDonut(groupData, summary.assets);
@@ -382,24 +390,26 @@ function renderDonut(groupData, totalAssets) {
     dom.donutLegend.innerHTML = "";
     return;
   }
-  const radius = 72;
+  const radius = 68;
   const circumference = 2 * Math.PI * radius;
+  const gap = 26;
   let offset = 0;
   const segments = visible.map((item) => {
     const length = (item.value / totalAssets) * circumference;
-    const segment = `<circle cx="100" cy="100" r="${radius}" fill="none" stroke="${item.meta.color}" stroke-width="28" stroke-dasharray="${length} ${circumference - length}" stroke-dashoffset="${-offset}"/>`;
+    const visibleLength = Math.max(1, length - gap);
+    const segment = `<circle cx="100" cy="100" r="${radius}" fill="none" stroke="${researchColors[item.key]}" stroke-width="22" stroke-linecap="round" stroke-dasharray="${visibleLength} ${circumference - visibleLength}" stroke-dashoffset="${-(offset + gap / 2)}"/>`;
     offset += length;
     return segment;
   }).join("");
-  dom.donutChart.innerHTML = `<svg viewBox="0 0 200 200" role="img" aria-label="财富构成图"><circle cx="100" cy="100" r="${radius}" fill="none" stroke="#ececef" stroke-width="28"/><g transform="rotate(-90 100 100)">${segments}</g><text x="100" y="91" text-anchor="middle" class="donut-caption">财富总额</text><text x="100" y="114" text-anchor="middle" class="donut-value">${formatCompactMoney(totalAssets)}</text></svg>`;
-  dom.donutLegend.innerHTML = visible.map((item) => `<div class="legend-row"><i style="background:${item.meta.color}"></i><span>${item.meta.name}</span><strong>${percentFormatter.format(item.ratio)}%</strong></div>`).join("");
+  dom.donutChart.innerHTML = `<svg viewBox="0 0 200 200" role="img" aria-label="财富构成图"><circle class="donut-orbit" cx="100" cy="100" r="86"/><circle class="donut-track" cx="100" cy="100" r="${radius}"/><g transform="rotate(-90 100 100)">${segments}</g><circle class="donut-center" cx="100" cy="100" r="48"/><text x="100" y="88" text-anchor="middle" class="donut-caption">资产配置</text><text x="100" y="109" text-anchor="middle" class="donut-value">${formatCompactMoney(totalAssets)}</text><text x="100" y="126" text-anchor="middle" class="donut-total">财富总额</text></svg>`;
+  dom.donutLegend.innerHTML = visible.map((item) => `<div class="legend-row" style="--legend-color:${researchColors[item.key]}"><i></i><span class="legend-copy"><strong>${item.meta.name}</strong><small data-money>${formatMoney(item.value)}</small></span><b>${percentFormatter.format(item.ratio)}%</b></div>`).join("");
 }
 
 function renderCategoryBars(groupData) {
   const max = Math.max(...groupData.map((item) => item.value), 1);
   dom.categoryBars.innerHTML = groupData.map((item) => {
     const height = item.value ? Math.max(6, (item.value / max) * 100) : 0;
-    return `<div class="bar-column"><div class="bar-value" data-money>${formatWan(item.value)}</div><div class="bar-track"><span style="height:${height}%;background:${item.meta.color}"></span></div><strong>${item.meta.name}</strong><small>${percentFormatter.format(item.ratio)}%</small></div>`;
+    return `<div class="bar-column"><div class="bar-value" data-money>${formatWan(item.value)}</div><div class="bar-track"><span style="height:${height}%;background:${researchColors[item.key]}"></span></div><strong>${item.meta.name}</strong><small>${percentFormatter.format(item.ratio)}%</small></div>`;
   }).join("");
 }
 
@@ -407,7 +417,7 @@ function renderResearchTable(groupData, totalAssets) {
   const rows = groupData.map((item) => {
     const status = item.ratio >= 60 ? "集中较高" : item.ratio >= 35 ? "主要配置" : item.ratio > 0 && item.ratio < 10 ? "占比较低" : item.ratio === 0 ? "尚未配置" : "结构适中";
     const statusClass = item.ratio >= 60 ? "risk" : item.ratio < 10 ? "watch" : "normal";
-    return `<div class="research-row"><span class="table-category"><i style="background:${item.meta.color}"></i>${item.meta.name}</span><strong data-money>${formatMoney(item.value)}</strong><span>${percentFormatter.format(item.ratio)}%</span><span>${item.count} 个</span><span class="${signedClass(item.change)}" data-money>${formatSigned(item.change)}</span><em class="table-status ${statusClass}">${status}</em></div>`;
+    return `<div class="research-row"><span class="table-category"><i style="background:${researchColors[item.key]}"></i>${item.meta.name}</span><strong data-money>${formatMoney(item.value)}</strong><span>${percentFormatter.format(item.ratio)}%</span><span>${item.count} 个</span><span class="${signedClass(item.change)}" data-money>${formatSigned(item.change)}</span><em class="table-status ${statusClass}">${status}</em></div>`;
   }).join("");
   dom.researchTable.innerHTML = `<div class="research-row is-header"><span>资产类别</span><span>当前金额</span><span>资产占比</span><span>账户数</span><span>年度变化</span><span>结构判断</span></div>${rows}<div class="research-row is-total"><span>财富总额</span><strong data-money>${formatMoney(totalAssets)}</strong><span>100%</span><span>${groupData.reduce((sum, item) => sum + item.count, 0)} 个</span><span>—</span><span>—</span></div>`;
 }
