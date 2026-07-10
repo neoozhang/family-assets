@@ -466,7 +466,7 @@ function renderAssetMap(summary) {
   const items = order.map((key) => ({ key, meta: groups[key], value: totals.get(key) || 0 })).filter((item) => item.value > 0);
   dom.assetMap.innerHTML = items.length ? items.map((item) => {
     const percent = summary.assets ? (item.value / summary.assets) * 100 : 0;
-    return `<article class="map-item" data-mark="${item.meta.mark}" style="--map-color:${item.meta.color};--map-soft:${item.meta.soft};--map-ink:${item.meta.color}"><div class="map-top"><span>${item.meta.name}</span><em>${percentFormatter.format(percent)}%</em></div><div class="map-bottom"><strong data-money>${formatMoney(item.value)}</strong><small>${summary.rows.filter((row) => row.type.group === item.key).length} 个账户</small></div></article>`;
+    return `<article class="map-item" data-group="${item.key}" style="--map-color:${item.meta.color};--map-soft:${item.meta.soft};--map-ink:${item.meta.color}"><div class="map-top"><span>${item.meta.name}</span><em>${percentFormatter.format(percent)}%</em></div><div class="map-bottom"><strong data-money>${formatMoney(item.value)}</strong><small>${summary.rows.filter((row) => row.type.group === item.key).length} 个账户</small></div></article>`;
   }).join("") : emptyState("添加资产账户后，这里会生成资产构成图。", "map");
   dom.debtBand.innerHTML = `<span>负债从总资产中扣除<small>${summary.rows.filter((row) => row.type.kind === "debt").length} 个负债账户</small></span><strong data-money>−${formatMoney(summary.debt)}</strong>`;
 }

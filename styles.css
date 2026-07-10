@@ -56,7 +56,8 @@ svg { display: block; width: 18px; height: 18px; fill: none; stroke: currentColo
 
 .worth-hero { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(420px, .75fr); overflow: hidden; min-height: 330px; color: #fff; background: var(--note-100); border-radius: 8px; box-shadow: var(--shadow); }
 .hero-main { position: relative; min-width: 0; padding: 30px 34px; border-right: 1px solid rgba(255,255,255,.17); }
-.hero-main::after { position: absolute; right: 28px; bottom: 20px; color: rgba(255,255,255,.06); content: "100"; font-family: Georgia, serif; font-size: 132px; font-weight: 800; line-height: 1; pointer-events: none; }
+.hero-main::before { position: absolute; top: 0; right: 116px; bottom: 0; width: 1px; background: rgba(255,255,255,.08); box-shadow: 8px 0 0 rgba(255,255,255,.035); content: ""; pointer-events: none; }
+.hero-main::after { position: absolute; right: -48px; bottom: -68px; width: 190px; height: 190px; border: 1px solid rgba(255,255,255,.1); border-radius: 22px; outline: 1px solid rgba(255,255,255,.055); outline-offset: -18px; content: ""; transform: rotate(45deg); pointer-events: none; }
 .hero-topline { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 16px; color: rgba(255,255,255,.72); font-size: 11px; }
 .year-picker { position: relative; display: inline-flex; align-items: center; }
 .year-picker select { min-height: 32px; padding: 0 26px 0 10px; color: #fff; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.22); border-radius: 6px; outline: none; appearance: none; font-size: 11px; }
@@ -94,7 +95,11 @@ svg { display: block; width: 18px; height: 18px; fill: none; stroke: currentColo
 
 .asset-map { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
 .map-item { position: relative; display: grid; align-content: space-between; min-height: 108px; padding: 14px; overflow: hidden; color: var(--map-ink); background: var(--map-soft); border: 1px solid color-mix(in srgb, var(--map-color) 18%, white); border-radius: 7px; }
-.map-item::after { position: absolute; right: -8px; bottom: -22px; color: color-mix(in srgb, var(--map-color) 10%, transparent); content: attr(data-mark); font-family: Georgia, serif; font-size: 74px; font-weight: 800; line-height: 1; }
+.map-item::before, .map-item::after { position: absolute; border: 1px solid color-mix(in srgb, var(--map-color) 15%, transparent); content: ""; pointer-events: none; }
+.map-item::before { right: -30px; bottom: -43px; width: 92px; height: 92px; border-radius: 14px; transform: rotate(45deg); }
+.map-item::after { right: 10px; bottom: -33px; width: 54px; height: 54px; border-radius: 9px; transform: rotate(45deg); }
+.map-item[data-group="investment"]::before, .map-item[data-group="reserve"]::after { transform: rotate(30deg); }
+.map-item[data-group="longterm"]::before, .map-item[data-group="other"]::after { transform: rotate(60deg); }
 .map-top, .map-bottom { position: relative; z-index: 1; display: flex; justify-content: space-between; gap: 8px; }
 .map-top span { font-size: 11px; font-weight: 700; }
 .map-top em { color: var(--map-color); font-size: 10px; font-style: normal; }
