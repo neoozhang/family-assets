@@ -327,7 +327,7 @@ function rowAt(item, end, previousEnd) {
 }
 
 function renderWorth(year, summary) {
-  dom.latestDate.textContent = summary.latestDate ? `最近盘点 ${formatDate(summary.latestDate, true)}` : "尚未记录";
+  dom.latestDate.textContent = summary.latestDate ? `最近归档 ${formatDate(summary.latestDate, true)}` : "尚无档案";
   dom.netWorth.textContent = formatMoney(summary.net);
   setSigned(dom.yearChange, summary.change);
   dom.yearRate.textContent = `${summary.rate >= 0 ? "+" : ""}${percentFormatter.format(summary.rate)}%`;
@@ -350,13 +350,13 @@ function renderAnalysis(year, summary) {
   const debtRatio = summary.assets ? (summary.debt / summary.assets) * 100 : 0;
   const largest = [...groupData].sort((a, b) => b.value - a.value)[0];
 
-  dom.analysisDate.textContent = summary.latestDate ? `基于 ${formatDate(summary.latestDate, true)} 盘点 · ${state.accounts.length} 个账户` : "尚无可分析的盘点数据";
-  dom.analysisTableMeta.textContent = summary.latestDate ? `截至 ${formatDate(summary.latestDate)}` : "当前盘点";
+  dom.analysisDate.textContent = summary.latestDate ? `基于 ${formatDate(summary.latestDate, true)} 档案 · ${state.accounts.length} 个账户` : "尚无可研究的档案数据";
+  dom.analysisTableMeta.textContent = summary.latestDate ? `截至 ${formatDate(summary.latestDate)}` : "当前档案";
   dom.analysisMetrics.innerHTML = [
-    { label: "家庭净资产", value: formatMoney(summary.net), note: `${year} 年度口径`, color: "#a83f4b", money: true },
+    { label: "财富净值", value: formatMoney(summary.net), note: `${year} 年度口径`, color: "#a83f4b", money: true },
     { label: "灵活资金占比", value: `${percentFormatter.format(liquidRatio)}%`, note: "微信、支付宝、存款与现金", color: "#477c79" },
     { label: "投资资产占比", value: `${percentFormatter.format(investmentRatio)}%`, note: "股票、基金、债券与数字资产", color: "#4d7c62" },
-    { label: "资产负债率", value: `${percentFormatter.format(debtRatio)}%`, note: "全部负债 ÷ 全部资产", color: "#6d5b85" },
+    { label: "负债占比", value: `${percentFormatter.format(debtRatio)}%`, note: "负债余额 ÷ 财富总额", color: "#6d5b85" },
   ].map((item) => `<article class="analysis-metric" style="--metric-color:${item.color}"><span>${item.label}</span><strong ${item.money ? "data-money" : ""}>${item.value}</strong><small>${item.note}</small></article>`).join("");
 
   renderDonut(groupData, summary.assets);
@@ -391,7 +391,7 @@ function renderDonut(groupData, totalAssets) {
     offset += length;
     return segment;
   }).join("");
-  dom.donutChart.innerHTML = `<svg viewBox="0 0 200 200" role="img" aria-label="资产构成圆盘"><circle cx="100" cy="100" r="${radius}" fill="none" stroke="#ececef" stroke-width="28"/><g transform="rotate(-90 100 100)">${segments}</g><text x="100" y="91" text-anchor="middle" class="donut-caption">全部资产</text><text x="100" y="114" text-anchor="middle" class="donut-value">${formatCompactMoney(totalAssets)}</text></svg>`;
+  dom.donutChart.innerHTML = `<svg viewBox="0 0 200 200" role="img" aria-label="财富构成图"><circle cx="100" cy="100" r="${radius}" fill="none" stroke="#ececef" stroke-width="28"/><g transform="rotate(-90 100 100)">${segments}</g><text x="100" y="91" text-anchor="middle" class="donut-caption">财富总额</text><text x="100" y="114" text-anchor="middle" class="donut-value">${formatCompactMoney(totalAssets)}</text></svg>`;
   dom.donutLegend.innerHTML = visible.map((item) => `<div class="legend-row"><i style="background:${item.meta.color}"></i><span>${item.meta.name}</span><strong>${percentFormatter.format(item.ratio)}%</strong></div>`).join("");
 }
 
@@ -409,18 +409,18 @@ function renderResearchTable(groupData, totalAssets) {
     const statusClass = item.ratio >= 60 ? "risk" : item.ratio < 10 ? "watch" : "normal";
     return `<div class="research-row"><span class="table-category"><i style="background:${item.meta.color}"></i>${item.meta.name}</span><strong data-money>${formatMoney(item.value)}</strong><span>${percentFormatter.format(item.ratio)}%</span><span>${item.count} 个</span><span class="${signedClass(item.change)}" data-money>${formatSigned(item.change)}</span><em class="table-status ${statusClass}">${status}</em></div>`;
   }).join("");
-  dom.researchTable.innerHTML = `<div class="research-row is-header"><span>资产类别</span><span>当前金额</span><span>资产占比</span><span>账户数</span><span>年度变化</span><span>结构判断</span></div>${rows}<div class="research-row is-total"><span>资产合计</span><strong data-money>${formatMoney(totalAssets)}</strong><span>100%</span><span>${groupData.reduce((sum, item) => sum + item.count, 0)} 个</span><span>—</span><span>—</span></div>`;
+  dom.researchTable.innerHTML = `<div class="research-row is-header"><span>资产类别</span><span>当前金额</span><span>资产占比</span><span>账户数</span><span>年度变化</span><span>结构判断</span></div>${rows}<div class="research-row is-total"><span>财富总额</span><strong data-money>${formatMoney(totalAssets)}</strong><span>100%</span><span>${groupData.reduce((sum, item) => sum + item.count, 0)} 个</span><span>—</span><span>—</span></div>`;
 }
 
 function renderNarrative(groupData, summary, largest, ratios) {
   if (!summary.assets) {
-    dom.analysisNarrative.innerHTML = emptyState("添加资产并完成盘点后生成分析。", "narrative");
+    dom.analysisNarrative.innerHTML = emptyState("添加资产并建立档案后生成解读。", "narrative");
     return;
   }
   const items = [];
   if (largest?.ratio >= 60) {
     const propertyNote = largest.key === "longterm" ? "若其中主要是自住房，不建议仅为调整比例仓促处置。" : "";
-    items.push({ level: "重点", tone: "high", title: `${largest.meta.name}占比集中`, text: `${largest.meta.name}占全部资产 ${percentFormatter.format(largest.ratio)}%。新增资金可优先补充其他类别，避免集中度继续上升。${propertyNote}` });
+    items.push({ level: "重点", tone: "high", title: `${largest.meta.name}占比集中`, text: `${largest.meta.name}占财富总额 ${percentFormatter.format(largest.ratio)}%。新增资金可优先补充其他类别，避免集中度继续上升。${propertyNote}` });
   } else {
     items.push({ level: "结构", tone: "good", title: "大类集中度未见极端", text: `当前最大类别为${largest.meta.name}，占比 ${percentFormatter.format(largest.ratio)}%。仍需结合具体账户和风险承受能力判断。` });
   }
@@ -473,9 +473,9 @@ function renderAssetMap(summary) {
 
 function renderYearTrend(year) {
   const records = getRecords().filter((record) => record.date.startsWith(year)).sort((a, b) => a.date.localeCompare(b.date));
-  dom.recordCount.textContent = `${records.length} 次盘点`;
+  dom.recordCount.textContent = `${records.length} 份档案`;
   if (!records.length) {
-    dom.trendChart.innerHTML = emptyState(`${year} 年还没有资产盘点记录。`, "trend");
+    dom.trendChart.innerHTML = emptyState(`${year} 年还没有盘点档案。`, "trend");
     dom.trendFoot.innerHTML = "";
     return;
   }
@@ -500,7 +500,7 @@ function trendSvg(records) {
   }));
   const line = coords.map((point, index) => `${index ? "L" : "M"}${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ");
   const area = `${line} L${coords.at(-1).x},${height - pad.bottom} L${coords[0].x},${height - pad.bottom} Z`;
-  return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="年度净资产趋势"><line class="chart-grid" x1="${pad.left}" y1="${pad.top}" x2="${width - pad.right}" y2="${pad.top}"/><line class="chart-grid" x1="${pad.left}" y1="${height / 2}" x2="${width - pad.right}" y2="${height / 2}"/><line class="chart-grid" x1="${pad.left}" y1="${height - pad.bottom}" x2="${width - pad.right}" y2="${height - pad.bottom}"/><path class="chart-area" d="${area}"/><path class="chart-line" d="${line}"/>${coords.map((point) => `<circle class="chart-dot" cx="${point.x}" cy="${point.y}" r="4"/><text class="chart-label" x="${point.x}" y="${height - 9}" text-anchor="middle">${shortDate(point.date)}</text>`).join("")}</svg>`;
+  return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="年度净值轨迹"><line class="chart-grid" x1="${pad.left}" y1="${pad.top}" x2="${width - pad.right}" y2="${pad.top}"/><line class="chart-grid" x1="${pad.left}" y1="${height / 2}" x2="${width - pad.right}" y2="${height / 2}"/><line class="chart-grid" x1="${pad.left}" y1="${height - pad.bottom}" x2="${width - pad.right}" y2="${height - pad.bottom}"/><path class="chart-area" d="${area}"/><path class="chart-line" d="${line}"/>${coords.map((point) => `<circle class="chart-dot" cx="${point.x}" cy="${point.y}" r="4"/><text class="chart-label" x="${point.x}" y="${height - 9}" text-anchor="middle">${shortDate(point.date)}</text>`).join("")}</svg>`;
 }
 
 function renderLatestChanges(year) {
@@ -508,7 +508,7 @@ function renderLatestChanges(year) {
   const currentDate = dates.at(-1);
   const previousDate = dates.at(-2);
   if (!currentDate || !previousDate) {
-    dom.changeList.innerHTML = emptyState("完成两次资产盘点后，这里会显示账户变化。", "changes");
+    dom.changeList.innerHTML = emptyState("建立两份档案后，这里会显示账户变化。", "changes");
     return;
   }
   const changes = state.accounts.map((item) => {
@@ -519,7 +519,7 @@ function renderLatestChanges(year) {
   dom.changeList.innerHTML = changes.length ? changes.map((row) => {
     const meta = groups[row.type.group];
     return `<article class="change-item" style="--item-color:${meta.color}"><span>${escapeHtml(displayName(row.account, row.type))}</span><strong class="${signedClass(row.change)}" data-money>${formatSigned(row.change)}</strong><small>${escapeHtml(row.account.institution || row.type.name)}</small></article>`;
-  }).join("") : emptyState("最近两次盘点的账户余额没有变化。", "changes");
+  }).join("") : emptyState("最近两份档案的账户余额没有变化。", "changes");
 }
 
 function getRecordDates() {
@@ -546,14 +546,14 @@ function renderRecords() {
   const highest = records.length ? [...records].sort((a, b) => b.net - a.net)[0] : null;
   const totalChange = latest && first ? latest.net - first.net : 0;
   const statData = [
-    { label: "最新净资产", value: latest ? formatMoney(latest.net) : formatMoney(0), copy: latest ? formatDate(latest.date, true) : "暂无盘点", color: "#a83f4b", tone: "" },
-    { label: "历史变化", value: formatSigned(totalChange), copy: first && latest ? `${formatDate(first.date)} 至今` : "等待更多记录", color: "#4d7c62", tone: signedClass(totalChange) },
-    { label: "历史最高", value: highest ? formatMoney(highest.net) : formatMoney(0), copy: highest ? formatDate(highest.date, true) : "暂无盘点", color: "#a5743e", tone: "" },
-    { label: "盘点次数", value: `${records.length} 次`, copy: `${getYears().length} 个年份`, color: "#6d5b85", tone: "" },
+    { label: "最新净值", value: latest ? formatMoney(latest.net) : formatMoney(0), copy: latest ? formatDate(latest.date, true) : "暂无档案", color: "#a83f4b", tone: "" },
+    { label: "档案变动", value: formatSigned(totalChange), copy: first && latest ? `${formatDate(first.date)} 至今` : "等待更多档案", color: "#4d7c62", tone: signedClass(totalChange) },
+    { label: "历史峰值", value: highest ? formatMoney(highest.net) : formatMoney(0), copy: highest ? formatDate(highest.date, true) : "暂无档案", color: "#a5743e", tone: "" },
+    { label: "档案数量", value: `${records.length} 份`, copy: `${getYears().length} 个年份`, color: "#6d5b85", tone: "" },
   ];
   dom.recordStats.innerHTML = statData.map((stat, index) => `<article class="record-stat" style="--stat-color:${stat.color}"><span>${stat.label}</span><strong class="${stat.tone}" ${index < 3 ? "data-money" : ""}>${stat.value}</strong><small>${stat.copy}</small></article>`).join("");
-  dom.historyMeta.textContent = records.length ? `${records.length} 次完整盘点` : "暂无记录";
-  dom.recordList.innerHTML = records.length ? [...records].reverse().map(recordRowHtml).join("") : emptyState("点击“开始盘点”建立第一条记录。", "records");
+  dom.historyMeta.textContent = records.length ? `${records.length} 份完整档案` : "暂无档案";
+  dom.recordList.innerHTML = records.length ? [...records].reverse().map(recordRowHtml).join("") : emptyState("点击“新增档案”建立第一份记录。", "records");
 }
 
 function recordRowHtml(record) {
@@ -562,7 +562,7 @@ function recordRowHtml(record) {
   const investment = totalForGroupsAt(record.date, ["investment"]);
   const longterm = totalForGroupsAt(record.date, ["longterm"]);
   const reserve = totalForGroupsAt(record.date, ["reserve", "other"]);
-  return `<article class="record-row"><div class="record-date"><strong>${Number(record.date.slice(5, 7))}/${Number(record.date.slice(8, 10))}</strong><span>${record.date.slice(0, 4)} 年</span></div><div class="record-worth"><span>家庭净资产</span><strong data-money>${formatMoney(record.net)}</strong></div><div class="record-bar" aria-label="资产分布"><i style="width:${liquid / total * 100}%;background:#477c79"></i><i style="width:${investment / total * 100}%;background:#4d7c62"></i><i style="width:${longterm / total * 100}%;background:#a5743e"></i><i style="width:${reserve / total * 100}%;background:#6d5b85"></i></div><strong class="record-change ${signedClass(record.change)}" data-money>${formatSigned(record.change)}</strong><svg><use href="#icon-chevron"></use></svg></article>`;
+  return `<article class="record-row"><div class="record-date"><strong>${Number(record.date.slice(5, 7))}/${Number(record.date.slice(8, 10))}</strong><span>${record.date.slice(0, 4)} 年</span></div><div class="record-worth"><span>财富净值</span><strong data-money>${formatMoney(record.net)}</strong></div><div class="record-bar" aria-label="财富分布"><i style="width:${liquid / total * 100}%;background:#477c79"></i><i style="width:${investment / total * 100}%;background:#4d7c62"></i><i style="width:${longterm / total * 100}%;background:#a5743e"></i><i style="width:${reserve / total * 100}%;background:#6d5b85"></i></div><strong class="record-change ${signedClass(record.change)}" data-money>${formatSigned(record.change)}</strong><svg><use href="#icon-chevron"></use></svg></article>`;
 }
 
 function totalForGroupsAt(date, groupNames) {
@@ -584,7 +584,7 @@ function accountCardHtml(item) {
   const type = getType(item);
   const group = groups[type.group];
   const latest = getLatestSnapshot(item.id);
-  return `<article class="account-card" style="--account-color:${group.color};--account-soft:${group.soft}"><div class="account-card-body"><div class="account-card-head">${accountIdentityHtml(item, type)}<span class="account-kind">${type.kind === "debt" ? "负债" : group.name}</span></div><strong class="account-balance" data-money>${formatMoney(latest?.balance || 0)}</strong><div class="account-meta"><span>${latest ? `更新于 ${formatDate(latest.date)}` : "尚未记录"}</span><span>${type.kind === "debt" ? "从净资产扣除" : "计入全部资产"}</span></div><div class="account-actions"><button type="button" data-edit-account="${item.id}" aria-label="编辑账户" title="编辑账户"><svg><use href="#icon-edit"></use></svg></button><button class="delete" type="button" data-delete-account="${item.id}" aria-label="删除账户" title="删除账户"><svg><use href="#icon-trash"></use></svg></button></div></div></article>`;
+  return `<article class="account-card" style="--account-color:${group.color};--account-soft:${group.soft}"><div class="account-card-body"><div class="account-card-head">${accountIdentityHtml(item, type)}<span class="account-kind">${type.kind === "debt" ? "负债" : group.name}</span></div><strong class="account-balance" data-money>${formatMoney(latest?.balance || 0)}</strong><div class="account-meta"><span>${latest ? `更新于 ${formatDate(latest.date)}` : "尚未收录"}</span><span>${type.kind === "debt" ? "从财富净值扣除" : "计入财富总额"}</span></div><div class="account-actions"><button type="button" data-edit-account="${item.id}" aria-label="编辑账户" title="编辑账户"><svg><use href="#icon-edit"></use></svg></button><button class="delete" type="button" data-delete-account="${item.id}" aria-label="删除账户" title="删除账户"><svg><use href="#icon-trash"></use></svg></button></div></div></article>`;
 }
 
 function accountIdentityHtml(item, type) {
@@ -622,7 +622,7 @@ function handleRecordSubmit(event) {
   saveState();
   closeDialog(dom.recordDialog);
   render();
-  showToast(`已完成 ${formatDate(date, true)} 资产盘点`);
+  showToast(`已保存 ${formatDate(date, true)} 财富档案`);
 }
 
 function openAccountDialog(accountId = "") {
@@ -706,7 +706,7 @@ function deleteAccount(accountId) {
 }
 
 function resetDemo() {
-  if (!confirm("恢复示例数据会覆盖当前全部账户和盘点记录，确定继续吗？")) return;
+  if (!confirm("恢复示例数据会覆盖当前账户名录和盘点档案，确定继续吗？")) return;
   state = createDemoState();
   saveState();
   render();
@@ -714,18 +714,18 @@ function resetDemo() {
 }
 
 function exportRecords() {
-  const rows = [["盘点日期", "家庭净资产", "全部资产", "全部负债", "较上次变化"], ...getRecords().map((record) => [record.date, record.net, record.assets, record.debt, record.change])];
+  const rows = [["归档日期", "财富净值", "财富总额", "负债余额", "档案变动"], ...getRecords().map((record) => [record.date, record.net, record.assets, record.debt, record.change])];
   const csv = "\ufeff" + rows.map((row) => row.map(csvCell).join(",")).join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "家庭资产盘点.csv";
+  link.download = "财富档案.csv";
   document.body.appendChild(link);
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
-  showToast("资产盘点记录已导出");
+  showToast("财富档案已导出");
 }
 
 function toggleAmounts() {
