@@ -389,32 +389,34 @@ function getGroupAnalysis(summary) {
 }
 
 function renderDonut(groupData, totalAssets) {
-  const visible = groupData.filter((item) => item.value > 0);
+  const visible = groupData.filter((item) => item.value > 0).sort((a, b) => b.value - a.value);
   if (!visible.length || !totalAssets) {
     dom.donutChart.innerHTML = emptyState("暂无资产数据。", "donut");
     dom.donutLegend.innerHTML = "";
     return;
   }
-  const radius = 68;
-  const circumference = 2 * Math.PI * radius;
-  const gap = 26;
-  let offset = 0;
-  const segments = visible.map((item) => {
-    const length = (item.value / totalAssets) * circumference;
-    const visibleLength = Math.max(1, length - gap);
-    const segment = `<circle cx="100" cy="100" r="${radius}" fill="none" stroke="${researchColors[item.key]}" stroke-width="22" stroke-linecap="round" stroke-dasharray="${visibleLength} ${circumference - visibleLength}" stroke-dashoffset="${-(offset + gap / 2)}"/>`;
-    offset += length;
-    return segment;
+  const ringCount = visible.length;
+  const outerRadius = ringCount <= 3 ? 76 : ringCount === 4 ? 78 : 80;
+  const innerRadius = ringCount <= 3 ? 40 : ringCount === 4 ? 30 : 28;
+  const strokeWidth = ringCount <= 3 ? 12 : ringCount === 4 ? 11 : 9;
+  const step = ringCount === 1 ? 0 : (outerRadius - innerRadius) / (ringCount - 1);
+  const rings = visible.map((item, index) => {
+    const radius = outerRadius - index * step;
+    const circumference = 2 * Math.PI * radius;
+    const progress = Math.min(1, item.ratio / 100);
+    const length = progress * circumference;
+    const color = researchColors[item.key];
+    return `<g style="--ring-color:${color}"><circle class="wealth-ring-track" cx="100" cy="100" r="${radius}" stroke-width="${strokeWidth}"/><circle class="wealth-ring-progress" cx="100" cy="100" r="${radius}" stroke-width="${strokeWidth}" stroke-dasharray="${length} ${circumference - length}" transform="rotate(-90 100 100)"/></g>`;
   }).join("");
-  dom.donutChart.innerHTML = `<svg viewBox="0 0 200 200" role="img" aria-label="财富构成图"><circle class="donut-orbit" cx="100" cy="100" r="86"/><circle class="donut-track" cx="100" cy="100" r="${radius}"/><g transform="rotate(-90 100 100)">${segments}</g><circle class="donut-center" cx="100" cy="100" r="48"/><text x="100" y="88" text-anchor="middle" class="donut-caption">资产配置</text><text x="100" y="109" text-anchor="middle" class="donut-value">${formatCompactMoney(totalAssets)}</text><text x="100" y="126" text-anchor="middle" class="donut-total">财富总额</text></svg>`;
+  dom.donutChart.innerHTML = `<svg viewBox="0 0 200 200" role="img" aria-label="财富构成同心圆环图">${rings}<circle class="wealth-ring-center" cx="100" cy="100" r="24"/><text x="100" y="96" text-anchor="middle" class="donut-caption">可配置资产</text><text x="100" y="110" text-anchor="middle" class="donut-value">${formatCompactMoney(totalAssets)}</text></svg>`;
   dom.donutLegend.innerHTML = visible.map((item) => `<div class="legend-row" style="--legend-color:${researchColors[item.key]}"><i></i><span class="legend-copy"><strong>${item.meta.name}</strong><small data-money>${formatMoney(item.value)}</small></span><b>${percentFormatter.format(item.ratio)}%</b></div>`).join("");
 }
 
 function renderCategoryBars(groupData) {
-  const max = Math.max(...groupData.map((item) => item.value), 1);
   dom.categoryBars.innerHTML = groupData.map((item) => {
-    const height = item.value ? Math.max(6, (item.value / max) * 100) : 0;
-    return `<div class="bar-column"><div class="bar-value" data-money>${formatWan(item.value)}</div><div class="bar-track"><span style="height:${height}%;background:${researchColors[item.key]}"></span></div><strong>${item.meta.name}</strong><small>${percentFormatter.format(item.ratio)}%</small></div>`;
+    const width = item.value ? Number(Math.max(2, Math.min(100, item.ratio)).toFixed(1)) : 0;
+    const fill = item.value ? `<span style="width:${width}%"></span>` : "";
+    return `<div class="bar-row" style="--bar-color:${researchColors[item.key]}"><div class="bar-row-head"><span><i></i><strong>${item.meta.name}</strong></span><b data-money>${formatWan(item.value)}</b><em>${percentFormatter.format(item.ratio)}%</em></div><div class="bar-track">${fill}</div></div>`;
   }).join("");
 }
 
