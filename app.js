@@ -395,20 +395,19 @@ function renderDonut(groupData, totalAssets) {
     dom.donutLegend.innerHTML = "";
     return;
   }
-  const ringCount = visible.length;
-  const outerRadius = ringCount <= 3 ? 76 : ringCount === 4 ? 78 : 80;
-  const innerRadius = ringCount <= 3 ? 40 : ringCount === 4 ? 30 : 28;
-  const strokeWidth = ringCount <= 3 ? 12 : ringCount === 4 ? 11 : 9;
-  const step = ringCount === 1 ? 0 : (outerRadius - innerRadius) / (ringCount - 1);
-  const rings = visible.map((item, index) => {
-    const radius = outerRadius - index * step;
-    const circumference = 2 * Math.PI * radius;
-    const progress = Math.min(1, item.ratio / 100);
-    const length = progress * circumference;
+  const radius = 70;
+  const circumference = 2 * Math.PI * radius;
+  const separator = 2.4;
+  let offset = 0;
+  const segments = visible.map((item) => {
+    const length = Math.min(1, item.ratio / 100) * circumference;
+    const visibleLength = Math.max(1, length - separator);
     const color = researchColors[item.key];
-    return `<g style="--ring-color:${color}"><circle class="wealth-ring-track" cx="100" cy="100" r="${radius}" stroke-width="${strokeWidth}"/><circle class="wealth-ring-progress" cx="100" cy="100" r="${radius}" stroke-width="${strokeWidth}" stroke-dasharray="${length} ${circumference - length}" transform="rotate(-90 100 100)"/></g>`;
+    const segment = `<circle class="wealth-ring-segment" cx="100" cy="100" r="${radius}" stroke="${color}" stroke-dasharray="${visibleLength} ${circumference - visibleLength}" stroke-dashoffset="${-(offset + separator / 2)}"/>`;
+    offset += length;
+    return segment;
   }).join("");
-  dom.donutChart.innerHTML = `<svg viewBox="0 0 200 200" role="img" aria-label="财富构成同心圆环图">${rings}<circle class="wealth-ring-center" cx="100" cy="100" r="24"/><text x="100" y="96" text-anchor="middle" class="donut-caption">可配置资产</text><text x="100" y="110" text-anchor="middle" class="donut-value">${formatCompactMoney(totalAssets)}</text></svg>`;
+  dom.donutChart.innerHTML = `<svg viewBox="0 0 200 200" role="img" aria-label="财富构成圆环图"><circle class="wealth-ring-base" cx="100" cy="100" r="${radius}"/><g transform="rotate(-90 100 100)">${segments}</g><circle class="wealth-ring-center" cx="100" cy="100" r="54"/><text x="100" y="95" text-anchor="middle" class="donut-caption">可配置资产</text><text x="100" y="113" text-anchor="middle" class="donut-value">${formatCompactMoney(totalAssets)}</text></svg>`;
   dom.donutLegend.innerHTML = visible.map((item) => `<div class="legend-row" style="--legend-color:${researchColors[item.key]}"><i></i><span class="legend-copy"><strong>${item.meta.name}</strong><small data-money>${formatMoney(item.value)}</small></span><b>${percentFormatter.format(item.ratio)}%</b></div>`).join("");
 }
 
