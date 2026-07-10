@@ -282,6 +282,7 @@ input:focus, select:focus { border-color: var(--note-5); box-shadow: 0 0 0 3px r
 .date-field { width: 190px; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
 .form-tip { display: flex; align-items: center; gap: 6px; margin: -6px 0 0; color: var(--muted); font-size: 9px; }
+.form-tip[hidden] { display: none; }
 .form-tip svg { width: 14px; height: 14px; }
 .record-form-list { display: grid; max-height: 390px; overflow-y: auto; border: 1px solid var(--line); border-radius: 7px; }
 .record-form-row { display: grid; grid-template-columns: minmax(170px, 1fr) minmax(150px, .65fr); gap: 14px; align-items: center; min-height: 63px; padding: 8px 12px; border-top: 1px solid var(--line); }
@@ -386,6 +387,8 @@ input:focus, select:focus { border-color: var(--note-5); box-shadow: 0 0 0 3px r
   .account-balance { grid-column: 1; margin-top: 10px; font-size: 22px; }
   .account-meta { grid-column: 1; margin-top: 2px; }
   .account-meta span:last-child { display: none; }
+  .account-card.is-restricted .account-meta span:first-child { display: none; }
+  .account-card.is-restricted .account-meta span:last-child { display: block; }
   .account-actions { grid-column: 2; grid-row: 2 / 4; align-self: end; margin: 0; padding: 0; border-top: 0; }
   .account-actions button { width: 36px; height: 36px; }
   .account-filter { margin-right: -8px; margin-left: -8px; padding: 0 8px 4px; }

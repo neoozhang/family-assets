@@ -6,6 +6,7 @@ const groups = {
   investment: { name: "投资资产", color: "#4d7c62", soft: "#e8f1eb", mark: "50" },
   longterm: { name: "房产实物", color: "#a5743e", soft: "#f5eddf", mark: "20" },
   reserve: { name: "长期储备", color: "#6d5b85", soft: "#eeeaf3", mark: "5" },
+  restricted: { name: "受限权益", color: "#64748b", soft: "#eef2f6", mark: "限" },
   other: { name: "其他资产", color: "#a83f4b", soft: "#f8e9eb", mark: "100" },
   debt: { name: "全部负债", color: "#82333e", soft: "#f8e9eb", mark: "−" },
 };
@@ -29,7 +30,10 @@ const typeCatalog = [
   { id: "crypto", name: "数字货币 / 交易所", short: "数字货币", kind: "asset", group: "investment", icon: "币" },
   { id: "property", name: "房产", short: "房产", kind: "asset", group: "longterm", icon: "房" },
   { id: "car", name: "车辆 / 贵重物品", short: "实物资产", kind: "asset", group: "longterm", icon: "物" },
-  { id: "pension", name: "公积金 / 养老金", short: "公积金养老", kind: "asset", group: "reserve", icon: "保" },
+  { id: "pension", name: "社保养老个人账户", short: "养老个人账户", kind: "restricted", group: "restricted", icon: "养" },
+  { id: "provident", name: "住房公积金", short: "住房公积金", kind: "restricted", group: "restricted", icon: "公" },
+  { id: "individual-pension", name: "个人养老金账户", short: "个人养老金", kind: "restricted", group: "restricted", icon: "退" },
+  { id: "annuity", name: "企业年金 / 职业年金", short: "企业职业年金", kind: "restricted", group: "restricted", icon: "年" },
   { id: "receivable", name: "借出款 / 应收", short: "应收款", kind: "asset", group: "reserve", icon: "收" },
   { id: "other", name: "其他", short: "其他", kind: "asset", group: "other", icon: "其" },
   { id: "credit", name: "信用卡 / 花呗 / 白条", short: "消费负债", kind: "debt", group: "debt", icon: "卡" },
@@ -88,6 +92,7 @@ const dom = {
   accountTypeSelect: byId("accountTypeSelect"),
   customTypeLabel: byId("customTypeLabel"),
   debtTip: byId("debtTip"),
+  restrictedTip: byId("restrictedTip"),
   toggleAmounts: byId("toggleAmounts"),
   toast: byId("toast"),
 };
@@ -521,7 +526,7 @@ function renderLatestChanges(year) {
     dom.changeList.innerHTML = emptyState("建立两份档案后，这里会显示账户变化。", "changes");
     return;
   }
-  const changes = state.accounts.map((item) => {
+  const changes = state.accounts.filter((item) => getType(item).kind !== "restricted").map((item) => {
     const current = getSnapshotAt(item.id, currentDate)?.balance || 0;
     const previous = getSnapshotAt(item.id, previousDate)?.balance || 0;
     return { account: item, type: getType(item), change: current - previous };
@@ -594,7 +599,8 @@ function accountCardHtml(item) {
   const type = getType(item);
   const group = groups[type.group];
   const latest = getLatestSnapshot(item.id);
-  return `<article class="account-card" style="--account-color:${group.color};--account-soft:${group.soft}"><div class="account-card-body"><div class="account-card-head">${accountIdentityHtml(item, type)}<span class="account-kind">${type.kind === "debt" ? "负债" : group.name}</span></div><strong class="account-balance" data-money>${formatMoney(latest?.balance || 0)}</strong><div class="account-meta"><span>${latest ? `更新于 ${formatDate(latest.date)}` : "尚未收录"}</span><span>${type.kind === "debt" ? "从财富净值扣除" : "计入财富总额"}</span></div><div class="account-actions"><button type="button" data-edit-account="${item.id}" aria-label="编辑账户" title="编辑账户"><svg><use href="#icon-edit"></use></svg></button><button class="delete" type="button" data-delete-account="${item.id}" aria-label="删除账户" title="删除账户"><svg><use href="#icon-trash"></use></svg></button></div></div></article>`;
+  const balanceNote = type.kind === "debt" ? "从财富净值扣除" : type.kind === "restricted" ? "暂不计入当前财富" : "计入财富总额";
+  return `<article class="account-card${type.kind === "restricted" ? " is-restricted" : ""}" style="--account-color:${group.color};--account-soft:${group.soft}"><div class="account-card-body"><div class="account-card-head">${accountIdentityHtml(item, type)}<span class="account-kind">${type.kind === "debt" ? "负债" : group.name}</span></div><strong class="account-balance" data-money>${formatMoney(latest?.balance || 0)}</strong><div class="account-meta"><span>${latest ? `更新于 ${formatDate(latest.date)}` : "尚未收录"}</span><span>${balanceNote}</span></div><div class="account-actions"><button type="button" data-edit-account="${item.id}" aria-label="编辑账户" title="编辑账户"><svg><use href="#icon-edit"></use></svg></button><button class="delete" type="button" data-delete-account="${item.id}" aria-label="删除账户" title="删除账户"><svg><use href="#icon-trash"></use></svg></button></div></div></article>`;
 }
 
 function accountIdentityHtml(item, type) {
@@ -662,6 +668,7 @@ function populateTypeSelect() {
     ["现金账户", typeCatalog.filter((type) => type.group === "liquid")],
     ["投资账户", typeCatalog.filter((type) => type.group === "investment")],
     ["长期资产", typeCatalog.filter((type) => ["longterm", "reserve", "other"].includes(type.group))],
+    ["受限权益（不计入当前财富）", typeCatalog.filter((type) => type.group === "restricted")],
     ["负债", typeCatalog.filter((type) => type.group === "debt")],
   ];
   dom.accountTypeSelect.innerHTML = sections.map(([label, types]) => `<optgroup label="${label}">${types.map((type) => `<option value="${type.id}">${type.name}</option>`).join("")}</optgroup>`).join("");
@@ -675,6 +682,7 @@ function syncAccountTypeFields() {
   input.required = type.id === "other";
   if (type.id !== "other") input.value = "";
   dom.debtTip.hidden = type.kind !== "debt";
+  dom.restrictedTip.hidden = type.kind !== "restricted";
 }
 
 function handleAccountSubmit(event) {
