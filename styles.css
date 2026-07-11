@@ -363,6 +363,8 @@ input:focus, select:focus { border-color: var(--note-5); box-shadow: 0 0 0 3px r
   .page-head p:not(.page-kicker) { font-size: 12px; }
   .page-actions { display: none; }
   .page-head > .primary-button { display: none; }
+  .view[data-view="records"] .page-actions { display: flex; }
+  .view[data-view="records"] #exportRecords { display: none; }
   .record-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .analysis-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .analysis-metric { padding: 14px; }

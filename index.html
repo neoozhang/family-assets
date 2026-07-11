@@ -130,7 +130,7 @@
       <section class="view" data-view="accounts">
         <div class="page-head">
           <div><p class="page-kicker">账户名录</p><h1>账户名录</h1><p>微信、支付宝、银行卡、投资、房产和负债都收录在这里。</p></div>
-          <button class="primary-button" id="addAccount" type="button"><svg><use href="#icon-plus"></use></svg>添加账户</button>
+          <button class="primary-button" id="addAccount" type="button"><svg><use href="#icon-plus"></use></svg>添加资产</button>
         </div>
         <div class="account-filter" id="accountFilter">
           <button class="is-active" type="button" data-filter="all">全部</button>
@@ -146,7 +146,7 @@
       </section>
     </main>
 
-    <button class="record-float" id="recordFloat" type="button" aria-label="开始资产盘点" title="开始资产盘点"><svg><use href="#icon-plus"></use></svg></button>
+    <button class="record-float" id="recordFloat" type="button" aria-label="添加资产项目" title="添加资产项目"><svg><use href="#icon-plus"></use></svg></button>
 
     <nav class="mobile-nav" aria-label="主导航">
       <button class="nav-button is-active" type="button" data-target="worth"><svg><use href="#icon-home"></use></svg><span>总览</span></button>
@@ -166,16 +166,16 @@
 
     <dialog class="modal" id="accountDialog">
       <form id="accountForm">
-        <div class="modal-head"><div><p class="page-kicker">账户名录</p><h2 id="accountDialogTitle">添加账户</h2><span id="accountDialogHelp">账户名称由资产类型自动生成</span></div><button class="icon-plain" type="button" data-close="accountDialog" aria-label="关闭"><svg><use href="#icon-close"></use></svg></button></div>
+        <div class="modal-head"><div><p class="page-kicker">资产项目</p><h2 id="accountDialogTitle">添加资产项目</h2><span id="accountDialogHelp">选择类别并填写金额</span></div><button class="icon-plain" type="button" data-close="accountDialog" aria-label="关闭"><svg><use href="#icon-close"></use></svg></button></div>
         <input type="hidden" name="accountId" />
-        <label><span>资产类型</span><select name="type" id="accountTypeSelect" required></select></label>
+        <label><span>资产类别</span><select name="type" id="accountTypeSelect" required></select></label>
         <label id="customTypeLabel" hidden><span id="customTypeText">自定义名称</span><input id="customNameInput" name="customName" maxlength="24" placeholder="例如 黄金、外汇、收藏品" /></label>
         <label><span>机构或平台 <em>选填</em></span><input name="institution" maxlength="24" placeholder="例如 招商银行、余额宝、某证券" /></label>
-        <div class="form-grid"><label><span>记录日期</span><input type="date" name="date" required /></label><label><span>当前余额</span><input type="number" name="balance" step="0.01" required placeholder="0.00" /></label></div>
+        <div class="form-grid"><label><span>记录日期</span><input type="date" name="date" required /></label><label><span>金额</span><input type="number" name="balance" step="0.01" required placeholder="0.00" /></label></div>
         <p class="form-tip" id="debtTip" hidden><svg><use href="#icon-info"></use></svg>负债填写正数，系统会自动从净资产中扣除。</p>
         <p class="form-tip" id="restrictedTip" hidden><svg><use href="#icon-info"></use></svg>受限权益仅作余额留档，不计入当前财富、年度变化和配置分析。</p>
         <p class="form-tip" id="receivableTip" hidden><svg><use href="#icon-info"></use></svg>应收款计入财富总额；收到还款后，编辑该账户并更新剩余金额。</p>
-        <div class="modal-actions"><button class="secondary-button" type="button" data-close="accountDialog">取消</button><button class="primary-button" id="accountSubmit" type="submit">保存账户</button></div>
+        <div class="modal-actions"><button class="secondary-button" type="button" data-close="accountDialog">取消</button><button class="primary-button" id="accountSubmit" type="submit">保存项目</button></div>
       </form>
     </dialog>
 

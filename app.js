@@ -207,10 +207,7 @@ function bindFloatingButton() {
   const button = byId("recordFloat");
   let drag = null;
   let suppressClick = false;
-  const activate = () => {
-    if (ui.view === "accounts") openAccountDialog();
-    else openRecordDialog();
-  };
+  const activate = () => openAccountDialog();
 
   restoreFloatingPosition(button);
   window.addEventListener("resize", () => restoreFloatingPosition(button));
@@ -309,7 +306,7 @@ function navigate(target) {
   dom.views.forEach((view) => view.classList.toggle("is-active", view.dataset.view === target));
   document.querySelectorAll(".nav-button[data-target]").forEach((button) => button.classList.toggle("is-active", button.dataset.target === target));
   const floatingButton = byId("recordFloat");
-  const floatingLabel = target === "accounts" ? "添加账户" : "开始资产盘点";
+  const floatingLabel = "添加资产项目";
   floatingButton.setAttribute("aria-label", floatingLabel);
   floatingButton.title = floatingLabel;
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -655,8 +652,8 @@ function openAccountDialog(accountId = "") {
   populateTypeSelect();
   dom.accountForm.elements.accountId.value = accountId;
   dom.accountForm.elements.date.value = todayIso();
-  dom.accountDialogTitle.textContent = accountId ? "编辑账户" : "添加账户";
-  dom.accountSubmit.textContent = accountId ? "保存修改" : "保存账户";
+  dom.accountDialogTitle.textContent = accountId ? "编辑资产项目" : "添加资产项目";
+  dom.accountSubmit.textContent = accountId ? "保存修改" : "保存项目";
   if (accountId) {
     const item = state.accounts.find((accountItem) => accountItem.id === accountId);
     if (!item) return;
@@ -676,8 +673,8 @@ function populateTypeSelect() {
   const sections = [
     ["现金账户", typeCatalog.filter((type) => type.group === "liquid")],
     ["投资账户", typeCatalog.filter((type) => type.group === "investment")],
-    ["长期资产", typeCatalog.filter((type) => ["longterm", "reserve", "other"].includes(type.group) && type.id !== "receivable")],
     ["应收款", typeCatalog.filter((type) => type.id === "receivable")],
+    ["长期资产", typeCatalog.filter((type) => ["longterm", "reserve", "other"].includes(type.group) && type.id !== "receivable")],
     ["受限权益（不计入当前财富）", typeCatalog.filter((type) => type.group === "restricted")],
     ["负债", typeCatalog.filter((type) => type.group === "debt")],
   ];
@@ -690,7 +687,7 @@ function syncAccountTypeFields() {
   const input = dom.accountForm.elements.customName;
   const needsCustomName = ["other", "receivable"].includes(type.id);
   dom.customTypeLabel.hidden = !needsCustomName;
-  dom.accountDialogHelp.textContent = type.id === "receivable" ? "每位欠款人建立一个应收账户" : "账户名称由资产类型自动生成";
+  dom.accountDialogHelp.textContent = type.id === "receivable" ? "每位欠款人建立一个应收账户" : "选择类别并填写金额";
   dom.customTypeText.textContent = type.id === "receivable" ? "欠款人姓名" : "自定义名称";
   dom.customNameInput.placeholder = type.id === "receivable" ? "例如 张三" : "例如 黄金、外汇、收藏品";
   input.required = needsCustomName;
