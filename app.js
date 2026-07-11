@@ -201,6 +201,7 @@ function bindEvents() {
   [dom.recordDialog, dom.accountDialog].forEach((dialog) => dialog.addEventListener("click", (event) => {
     if (event.target === dialog) closeDialog(dialog);
   }));
+  [dom.recordDialog, dom.accountDialog].forEach((dialog) => dialog.addEventListener("close", unlockPageScroll));
 }
 
 function bindFloatingButton() {
@@ -791,6 +792,7 @@ function displayName(item, type = getType(item)) {
 }
 
 function openDialog(dialog) {
+  lockPageScroll();
   if (typeof dialog.showModal === "function") dialog.showModal();
   else dialog.setAttribute("open", "");
 }
@@ -798,7 +800,26 @@ function openDialog(dialog) {
 function closeDialog(dialog) {
   if (!dialog) return;
   if (typeof dialog.close === "function") dialog.close();
-  else dialog.removeAttribute("open");
+  else {
+    dialog.removeAttribute("open");
+    unlockPageScroll();
+  }
+}
+
+let lockedScrollY = 0;
+
+function lockPageScroll() {
+  if (document.body.classList.contains("modal-open")) return;
+  lockedScrollY = window.scrollY;
+  document.body.style.top = `-${lockedScrollY}px`;
+  document.body.classList.add("modal-open");
+}
+
+function unlockPageScroll() {
+  if ([dom.recordDialog, dom.accountDialog].some((dialog) => dialog.open)) return;
+  document.body.classList.remove("modal-open");
+  document.body.style.top = "";
+  window.scrollTo({ top: lockedScrollY, behavior: "instant" });
 }
 
 function showToast(message) {
