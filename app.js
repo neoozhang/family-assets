@@ -207,6 +207,10 @@ function bindFloatingButton() {
   const button = byId("recordFloat");
   let drag = null;
   let suppressClick = false;
+  const activate = () => {
+    if (ui.view === "accounts") openAccountDialog();
+    else openRecordDialog();
+  };
 
   restoreFloatingPosition(button);
   window.addEventListener("resize", () => restoreFloatingPosition(button));
@@ -238,7 +242,7 @@ function bindFloatingButton() {
     button.releasePointerCapture?.(event.pointerId);
     button.classList.remove("is-dragging");
     if (drag.moved) saveFloatingPosition(button);
-    else if (shouldActivate) openRecordDialog();
+    else if (shouldActivate) activate();
     drag = null;
     setTimeout(() => { suppressClick = false; }, 0);
   };
@@ -249,7 +253,7 @@ function bindFloatingButton() {
       suppressClick = false;
       return;
     }
-    openRecordDialog();
+    activate();
   });
 }
 
@@ -304,6 +308,10 @@ function navigate(target) {
   ui.view = target;
   dom.views.forEach((view) => view.classList.toggle("is-active", view.dataset.view === target));
   document.querySelectorAll(".nav-button[data-target]").forEach((button) => button.classList.toggle("is-active", button.dataset.target === target));
+  const floatingButton = byId("recordFloat");
+  const floatingLabel = target === "accounts" ? "添加账户" : "开始资产盘点";
+  floatingButton.setAttribute("aria-label", floatingLabel);
+  floatingButton.title = floatingLabel;
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
