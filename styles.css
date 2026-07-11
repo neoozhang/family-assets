@@ -393,6 +393,8 @@ input:focus, select:focus { border-color: var(--note-5); box-shadow: 0 0 0 3px r
   .account-meta span:last-child { display: none; }
   .account-card.is-restricted .account-meta span:first-child { display: none; }
   .account-card.is-restricted .account-meta span:last-child { display: block; }
+  .account-card.is-receivable .account-meta span:first-child { display: none; }
+  .account-card.is-receivable .account-meta span:last-child { display: block; }
   .account-actions { grid-column: 2; grid-row: 2 / 4; align-self: end; margin: 0; padding: 0; border-top: 0; }
   .account-actions button { width: 36px; height: 36px; }
   .account-filter { margin-right: -8px; margin-left: -8px; padding: 0 8px 4px; }

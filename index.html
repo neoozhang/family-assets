@@ -136,6 +136,7 @@
           <button class="is-active" type="button" data-filter="all">全部</button>
           <button type="button" data-filter="liquid">现金账户</button>
           <button type="button" data-filter="investment">投资账户</button>
+          <button type="button" data-filter="receivable">应收款</button>
           <button type="button" data-filter="longterm">长期资产</button>
           <button type="button" data-filter="restricted">受限权益</button>
           <button type="button" data-filter="debt">负债</button>
@@ -165,14 +166,15 @@
 
     <dialog class="modal" id="accountDialog">
       <form id="accountForm">
-        <div class="modal-head"><div><p class="page-kicker">账户名录</p><h2 id="accountDialogTitle">添加账户</h2><span>账户名称由资产类型自动生成</span></div><button class="icon-plain" type="button" data-close="accountDialog" aria-label="关闭"><svg><use href="#icon-close"></use></svg></button></div>
+        <div class="modal-head"><div><p class="page-kicker">账户名录</p><h2 id="accountDialogTitle">添加账户</h2><span id="accountDialogHelp">账户名称由资产类型自动生成</span></div><button class="icon-plain" type="button" data-close="accountDialog" aria-label="关闭"><svg><use href="#icon-close"></use></svg></button></div>
         <input type="hidden" name="accountId" />
         <label><span>资产类型</span><select name="type" id="accountTypeSelect" required></select></label>
-        <label id="customTypeLabel" hidden><span>自定义名称</span><input name="customName" maxlength="24" placeholder="例如 黄金、外汇、收藏品" /></label>
+        <label id="customTypeLabel" hidden><span id="customTypeText">自定义名称</span><input id="customNameInput" name="customName" maxlength="24" placeholder="例如 黄金、外汇、收藏品" /></label>
         <label><span>机构或平台 <em>选填</em></span><input name="institution" maxlength="24" placeholder="例如 招商银行、余额宝、某证券" /></label>
         <div class="form-grid"><label><span>记录日期</span><input type="date" name="date" required /></label><label><span>当前余额</span><input type="number" name="balance" step="0.01" required placeholder="0.00" /></label></div>
         <p class="form-tip" id="debtTip" hidden><svg><use href="#icon-info"></use></svg>负债填写正数，系统会自动从净资产中扣除。</p>
         <p class="form-tip" id="restrictedTip" hidden><svg><use href="#icon-info"></use></svg>受限权益仅作余额留档，不计入当前财富、年度变化和配置分析。</p>
+        <p class="form-tip" id="receivableTip" hidden><svg><use href="#icon-info"></use></svg>应收款计入财富总额；收到还款后，编辑该账户并更新剩余金额。</p>
         <div class="modal-actions"><button class="secondary-button" type="button" data-close="accountDialog">取消</button><button class="primary-button" id="accountSubmit" type="submit">保存账户</button></div>
       </form>
     </dialog>

@@ -34,7 +34,7 @@ const typeCatalog = [
   { id: "provident", name: "住房公积金", short: "住房公积金", kind: "restricted", group: "restricted", icon: "公" },
   { id: "individual-pension", name: "个人养老金账户", short: "个人养老金", kind: "restricted", group: "restricted", icon: "退" },
   { id: "annuity", name: "企业年金 / 职业年金", short: "企业职业年金", kind: "restricted", group: "restricted", icon: "年" },
-  { id: "receivable", name: "借出款 / 应收", short: "应收款", kind: "asset", group: "reserve", icon: "收" },
+  { id: "receivable", name: "应收款 / 外借款", short: "应收款", kind: "asset", group: "reserve", icon: "借" },
   { id: "other", name: "其他", short: "其他", kind: "asset", group: "other", icon: "其" },
   { id: "credit", name: "信用卡 / 花呗 / 白条", short: "消费负债", kind: "debt", group: "debt", icon: "卡" },
   { id: "loan", name: "房贷 / 车贷 / 贷款", short: "长期贷款", kind: "debt", group: "debt", icon: "贷" },
@@ -88,11 +88,15 @@ const dom = {
   accountDialog: byId("accountDialog"),
   accountForm: byId("accountForm"),
   accountDialogTitle: byId("accountDialogTitle"),
+  accountDialogHelp: byId("accountDialogHelp"),
   accountSubmit: byId("accountSubmit"),
   accountTypeSelect: byId("accountTypeSelect"),
   customTypeLabel: byId("customTypeLabel"),
+  customTypeText: byId("customTypeText"),
+  customNameInput: byId("customNameInput"),
   debtTip: byId("debtTip"),
   restrictedTip: byId("restrictedTip"),
+  receivableTip: byId("receivableTip"),
   toggleAmounts: byId("toggleAmounts"),
   toast: byId("toast"),
 };
@@ -583,7 +587,8 @@ function renderAccounts() {
   const accounts = state.accounts.filter((item) => {
     const type = getType(item);
     if (ui.accountFilter === "all") return true;
-    if (ui.accountFilter === "longterm") return ["longterm", "reserve", "other"].includes(type.group);
+    if (ui.accountFilter === "receivable") return type.id === "receivable";
+    if (ui.accountFilter === "longterm") return ["longterm", "reserve", "other"].includes(type.group) && type.id !== "receivable";
     return type.group === ui.accountFilter;
   });
   dom.accountGrid.innerHTML = accounts.length ? accounts.map(accountCardHtml).join("") : emptyState("这个分类下还没有账户。", "accounts");
@@ -593,8 +598,10 @@ function accountCardHtml(item) {
   const type = getType(item);
   const group = groups[type.group];
   const latest = getLatestSnapshot(item.id);
-  const balanceNote = type.kind === "debt" ? "从财富净值扣除" : type.kind === "restricted" ? "暂不计入当前财富" : "计入财富总额";
-  return `<article class="account-card${type.kind === "restricted" ? " is-restricted" : ""}" style="--account-color:${group.color};--account-soft:${group.soft}"><div class="account-card-body"><div class="account-card-head">${accountIdentityHtml(item, type)}<span class="account-kind">${type.kind === "debt" ? "负债" : group.name}</span></div><strong class="account-balance" data-money>${formatMoney(latest?.balance || 0)}</strong><div class="account-meta"><span>${latest ? `更新于 ${formatDate(latest.date)}` : "尚未收录"}</span><span>${balanceNote}</span></div><div class="account-actions"><button type="button" data-edit-account="${item.id}" aria-label="编辑账户" title="编辑账户"><svg><use href="#icon-edit"></use></svg></button><button class="delete" type="button" data-delete-account="${item.id}" aria-label="删除账户" title="删除账户"><svg><use href="#icon-trash"></use></svg></button></div></div></article>`;
+  const balanceNote = type.kind === "debt" ? "从财富净值扣除" : type.kind === "restricted" ? "暂不计入当前财富" : type.id === "receivable" ? "等待对方归还" : "计入财富总额";
+  const kindLabel = type.kind === "debt" ? "负债" : type.id === "receivable" ? "应收款" : group.name;
+  const cardClass = type.kind === "restricted" ? " is-restricted" : type.id === "receivable" ? " is-receivable" : "";
+  return `<article class="account-card${cardClass}" style="--account-color:${group.color};--account-soft:${group.soft}"><div class="account-card-body"><div class="account-card-head">${accountIdentityHtml(item, type)}<span class="account-kind">${kindLabel}</span></div><strong class="account-balance" data-money>${formatMoney(latest?.balance || 0)}</strong><div class="account-meta"><span>${latest ? `更新于 ${formatDate(latest.date)}` : "尚未收录"}</span><span>${balanceNote}</span></div><div class="account-actions"><button type="button" data-edit-account="${item.id}" aria-label="编辑账户" title="编辑账户"><svg><use href="#icon-edit"></use></svg></button><button class="delete" type="button" data-delete-account="${item.id}" aria-label="删除账户" title="删除账户"><svg><use href="#icon-trash"></use></svg></button></div></div></article>`;
 }
 
 function accountIdentityHtml(item, type) {
@@ -647,7 +654,7 @@ function openAccountDialog(accountId = "") {
     if (!item) return;
     const latest = getLatestSnapshot(item.id);
     dom.accountForm.elements.type.value = item.type;
-    dom.accountForm.elements.customName.value = item.type === "other" ? item.name || "" : "";
+    dom.accountForm.elements.customName.value = ["other", "receivable"].includes(item.type) ? item.name || "" : "";
     dom.accountForm.elements.institution.value = item.institution || "";
     dom.accountForm.elements.date.value = latest?.date || todayIso();
     dom.accountForm.elements.balance.value = Math.abs(latest?.balance || 0);
@@ -661,7 +668,8 @@ function populateTypeSelect() {
   const sections = [
     ["现金账户", typeCatalog.filter((type) => type.group === "liquid")],
     ["投资账户", typeCatalog.filter((type) => type.group === "investment")],
-    ["长期资产", typeCatalog.filter((type) => ["longterm", "reserve", "other"].includes(type.group))],
+    ["长期资产", typeCatalog.filter((type) => ["longterm", "reserve", "other"].includes(type.group) && type.id !== "receivable")],
+    ["应收款", typeCatalog.filter((type) => type.id === "receivable")],
     ["受限权益（不计入当前财富）", typeCatalog.filter((type) => type.group === "restricted")],
     ["负债", typeCatalog.filter((type) => type.group === "debt")],
   ];
@@ -672,11 +680,16 @@ function populateTypeSelect() {
 function syncAccountTypeFields() {
   const type = typeById.get(dom.accountTypeSelect.value) || typeCatalog[0];
   const input = dom.accountForm.elements.customName;
-  dom.customTypeLabel.hidden = type.id !== "other";
-  input.required = type.id === "other";
-  if (type.id !== "other") input.value = "";
+  const needsCustomName = ["other", "receivable"].includes(type.id);
+  dom.customTypeLabel.hidden = !needsCustomName;
+  dom.accountDialogHelp.textContent = type.id === "receivable" ? "每位欠款人建立一个应收账户" : "账户名称由资产类型自动生成";
+  dom.customTypeText.textContent = type.id === "receivable" ? "欠款人姓名" : "自定义名称";
+  dom.customNameInput.placeholder = type.id === "receivable" ? "例如 张三" : "例如 黄金、外汇、收藏品";
+  input.required = needsCustomName;
+  if (!needsCustomName) input.value = "";
   dom.debtTip.hidden = type.kind !== "debt";
   dom.restrictedTip.hidden = type.kind !== "restricted";
+  dom.receivableTip.hidden = type.id !== "receivable";
 }
 
 function handleAccountSubmit(event) {
@@ -687,7 +700,7 @@ function handleAccountSubmit(event) {
   const next = {
     id: accountId,
     type: type.id,
-    name: type.id === "other" ? String(data.get("customName") || "").trim() : type.short,
+    name: ["other", "receivable"].includes(type.id) ? String(data.get("customName") || "").trim() : type.short,
     institution: String(data.get("institution") || "").trim(),
     currency: "CNY",
   };
@@ -767,7 +780,9 @@ function getType(item) {
 }
 
 function displayName(item, type = getType(item)) {
-  return type.id === "other" ? item.name || "其他" : type.short;
+  if (type.id === "other") return item.name || "其他";
+  if (type.id === "receivable") return item.name || "应收款";
+  return type.short;
 }
 
 function openDialog(dialog) {
