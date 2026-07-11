@@ -44,9 +44,16 @@ const typeById = new Map(typeCatalog.map((type) => [type.id, type]));
 const moneyFormatter = new Intl.NumberFormat("zh-CN", { style: "currency", currency: "CNY", maximumFractionDigits: 0 });
 const percentFormatter = new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 1 });
 
+let activeStorageKey = STORAGE_KEY;
 let state = loadState();
 let ui = { view: "worth", accountFilter: "all", amountsHidden: false };
 let toastTimer;
+let cloudStore = null;
+let cloudSession = null;
+let cloudHousehold = null;
+let cloudReady = false;
+let cloudSyncTimer = null;
+let activeCloudUserId = "";
 
 const dom = {
   views: document.querySelectorAll(".view"),
@@ -97,12 +104,30 @@ const dom = {
   debtTip: byId("debtTip"),
   restrictedTip: byId("restrictedTip"),
   receivableTip: byId("receivableTip"),
+  cloudAccountButton: byId("cloudAccountButton"),
+  cloudButtonText: byId("cloudButtonText"),
+  storageIndicator: byId("storageIndicator"),
+  storageStatus: byId("storageStatus"),
+  authDialog: byId("authDialog"),
+  authForm: byId("authForm"),
+  authDialogTitle: byId("authDialogTitle"),
+  authDialogHelp: byId("authDialogHelp"),
+  authSignedOut: byId("authSignedOut"),
+  authSignedIn: byId("authSignedIn"),
+  authEmail: byId("authEmail"),
+  authHousehold: byId("authHousehold"),
+  syncStatusDot: byId("syncStatusDot"),
+  syncStatusText: byId("syncStatusText"),
+  registerButton: byId("registerButton"),
+  syncNowButton: byId("syncNowButton"),
+  signOutButton: byId("signOutButton"),
   toggleAmounts: byId("toggleAmounts"),
   toast: byId("toast"),
 };
 
 bindEvents();
 render();
+initializeCloud();
 
 function byId(id) {
   return document.getElementById(id);
@@ -110,7 +135,7 @@ function byId(id) {
 
 function loadState() {
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    const saved = JSON.parse(localStorage.getItem(activeStorageKey) || "null");
     if (saved && Array.isArray(saved.accounts) && Array.isArray(saved.snapshots)) return normalizeState(saved);
   } catch {
     // Invalid local data falls back to the example ledger.
@@ -157,12 +182,17 @@ function createDemoState() {
   };
 }
 
+function createEmptyState() {
+  return { accounts: [], snapshots: [], settings: { year: String(new Date().getFullYear()) } };
+}
+
 function account(id, name, type, institution) {
   return { id, name, type, institution, currency: "CNY" };
 }
 
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  localStorage.setItem(activeStorageKey, JSON.stringify(state));
+  queueCloudSync();
 }
 
 function bindEvents() {
@@ -174,6 +204,11 @@ function bindEvents() {
   byId("exportRecords").addEventListener("click", exportRecords);
   byId("resetDemo").addEventListener("click", resetDemo);
   dom.toggleAmounts.addEventListener("click", toggleAmounts);
+  dom.cloudAccountButton.addEventListener("click", () => openDialog(dom.authDialog));
+  dom.authForm.addEventListener("submit", handleCloudSignIn);
+  dom.registerButton.addEventListener("click", handleCloudSignUp);
+  dom.syncNowButton.addEventListener("click", () => syncCloudNow(true));
+  dom.signOutButton.addEventListener("click", handleCloudSignOut);
 
   dom.yearSelect.addEventListener("change", () => {
     state.settings.year = dom.yearSelect.value;
@@ -198,10 +233,10 @@ function bindEvents() {
     const deleteButton = event.target.closest("[data-delete-account]");
     if (deleteButton) deleteAccount(deleteButton.dataset.deleteAccount);
   });
-  [dom.recordDialog, dom.accountDialog].forEach((dialog) => dialog.addEventListener("click", (event) => {
+  [dom.recordDialog, dom.accountDialog, dom.authDialog].forEach((dialog) => dialog.addEventListener("click", (event) => {
     if (event.target === dialog) closeDialog(dialog);
   }));
-  [dom.recordDialog, dom.accountDialog].forEach((dialog) => dialog.addEventListener("close", unlockPageScroll));
+  [dom.recordDialog, dom.accountDialog, dom.authDialog].forEach((dialog) => dialog.addEventListener("close", unlockPageScroll));
 }
 
 function bindFloatingButton() {
@@ -767,6 +802,161 @@ function toggleAmounts() {
   dom.toggleAmounts.setAttribute("aria-label", dom.toggleAmounts.title);
 }
 
+async function initializeCloud() {
+  try {
+    cloudStore = new window.WealthCloud(window.WEALTH_CLOUD_CONFIG);
+    const session = await cloudStore.getSession();
+    await applyCloudSession(session);
+    cloudStore.onAuthStateChange((event, nextSession) => {
+      if (event === "TOKEN_REFRESHED") return;
+      setTimeout(() => applyCloudSession(nextSession), 0);
+    });
+  } catch (error) {
+    updateCloudStatus("error", "云端连接失败");
+    console.error(error);
+  }
+}
+
+async function applyCloudSession(session) {
+  const nextUserId = session?.user?.id || "";
+  if (nextUserId && nextUserId === activeCloudUserId && cloudReady) {
+    cloudSession = session;
+    updateAuthUi();
+    return;
+  }
+
+  cloudReady = false;
+  clearTimeout(cloudSyncTimer);
+  cloudSession = session;
+  activeCloudUserId = nextUserId;
+
+  if (!session) {
+    cloudHousehold = null;
+    activeStorageKey = STORAGE_KEY;
+    state = loadState();
+    ensureYear();
+    render();
+    updateAuthUi();
+    updateCloudStatus("local", "数据仅保存在当前浏览器");
+    return;
+  }
+
+  updateAuthUi();
+  updateCloudStatus("syncing", "正在读取云端数据");
+  try {
+    activeStorageKey = `${STORAGE_KEY}:${session.user.id}`;
+    const cached = localStorage.getItem(activeStorageKey);
+    const result = await cloudStore.loadState(session.user);
+    cloudHousehold = result.household;
+    if (result.isEmpty) {
+      state = cached ? loadState() : createEmptyState();
+      localStorage.setItem(activeStorageKey, JSON.stringify(state));
+      await cloudStore.syncState(state);
+    } else {
+      state = normalizeState(result.state);
+      localStorage.setItem(activeStorageKey, JSON.stringify(state));
+    }
+    cloudReady = true;
+    ensureYear();
+    render();
+    updateAuthUi();
+    updateCloudStatus("online", "云端已同步");
+    if (dom.authDialog.open) closeDialog(dom.authDialog);
+  } catch (error) {
+    updateCloudStatus("error", "云端同步失败");
+    showToast(`云端同步失败：${error.message}`);
+    console.error(error);
+  }
+}
+
+async function handleCloudSignIn(event) {
+  event.preventDefault();
+  if (!cloudStore) return showToast("云端服务尚未连接");
+  const data = new FormData(dom.authForm);
+  updateCloudStatus("syncing", "正在登录");
+  try {
+    await cloudStore.signIn(String(data.get("email") || "").trim(), String(data.get("password") || ""));
+    showToast("登录成功，正在读取云端数据");
+  } catch (error) {
+    updateCloudStatus("error", "登录失败");
+    showToast(`登录失败：${error.message}`);
+  }
+}
+
+async function handleCloudSignUp() {
+  if (!dom.authForm.reportValidity() || !cloudStore) return;
+  const data = new FormData(dom.authForm);
+  updateCloudStatus("syncing", "正在注册");
+  try {
+    const result = await cloudStore.signUp(String(data.get("email") || "").trim(), String(data.get("password") || ""));
+    if (result.session) showToast("注册成功，正在建立云端空间");
+    else {
+      updateCloudStatus("local", "等待邮箱确认");
+      showToast("注册成功，请到邮箱完成确认后登录");
+    }
+  } catch (error) {
+    updateCloudStatus("error", "注册失败");
+    showToast(`注册失败：${error.message}`);
+  }
+}
+
+async function handleCloudSignOut() {
+  if (!cloudStore) return;
+  try {
+    await cloudStore.signOut();
+    closeDialog(dom.authDialog);
+    showToast("已退出云端账户");
+  } catch (error) {
+    showToast(`退出失败：${error.message}`);
+  }
+}
+
+function queueCloudSync() {
+  if (!cloudReady || !cloudStore || !cloudSession) return;
+  clearTimeout(cloudSyncTimer);
+  updateCloudStatus("syncing", "等待同步");
+  cloudSyncTimer = setTimeout(() => syncCloudNow(false), 700);
+}
+
+async function syncCloudNow(showSuccess) {
+  if (!cloudReady || !cloudStore || !cloudSession) return;
+  clearTimeout(cloudSyncTimer);
+  updateCloudStatus("syncing", "正在同步");
+  try {
+    await cloudStore.syncState(state);
+    updateCloudStatus("online", "云端已同步");
+    if (showSuccess) showToast("云端同步完成");
+  } catch (error) {
+    updateCloudStatus("error", "云端同步失败");
+    showToast(`云端同步失败：${error.message}`);
+    console.error(error);
+  }
+}
+
+function updateAuthUi() {
+  const signedIn = Boolean(cloudSession?.user);
+  dom.authSignedOut.hidden = signedIn;
+  dom.authSignedIn.hidden = !signedIn;
+  dom.authDialogTitle.textContent = signedIn ? "云端账户" : "登录财富档案";
+  dom.authDialogHelp.textContent = signedIn ? "管理当前登录与同步状态" : "登录后在手机和电脑间同步资产数据";
+  dom.cloudButtonText.textContent = signedIn ? "云端" : "登录";
+  if (signedIn) {
+    dom.authEmail.textContent = cloudSession.user.email || "已登录用户";
+    dom.authHousehold.textContent = cloudHousehold?.name || "正在读取家庭空间";
+  }
+}
+
+function updateCloudStatus(mode, message) {
+  dom.cloudAccountButton.classList.remove("is-online", "is-syncing", "has-error");
+  if (mode === "online") dom.cloudAccountButton.classList.add("is-online");
+  if (mode === "syncing") dom.cloudAccountButton.classList.add("is-syncing");
+  if (mode === "error") dom.cloudAccountButton.classList.add("has-error");
+  dom.storageIndicator.style.background = mode === "online" ? "#38a56a" : mode === "syncing" ? "#e0a23c" : mode === "error" ? "#a83f4b" : "#aeb3bc";
+  dom.storageStatus.textContent = message;
+  dom.syncStatusText.textContent = message;
+  dom.syncStatusDot.style.background = mode === "online" ? "#38a56a" : mode === "syncing" ? "#e0a23c" : mode === "error" ? "#a83f4b" : "#aeb3bc";
+}
+
 function getSnapshotAt(accountId, date) {
   return state.snapshots.filter((item) => item.accountId === accountId && item.date <= date).sort((a, b) => b.date.localeCompare(a.date))[0];
 }
@@ -816,7 +1006,7 @@ function lockPageScroll() {
 }
 
 function unlockPageScroll() {
-  if ([dom.recordDialog, dom.accountDialog].some((dialog) => dialog.open)) return;
+  if ([dom.recordDialog, dom.accountDialog, dom.authDialog].some((dialog) => dialog.open)) return;
   document.body.classList.remove("modal-open");
   document.body.style.top = "";
   window.scrollTo({ top: lockedScrollY, behavior: "instant" });

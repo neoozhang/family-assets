@@ -24,6 +24,8 @@
       <symbol id="icon-chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
       <symbol id="icon-calendar" viewBox="0 0 24 24"><path d="M7 3v4M17 3v4M4 9h16M6 5h12a2 2 0 0 1 2 2v13H4V7a2 2 0 0 1 2-2Z"/></symbol>
       <symbol id="icon-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+      <symbol id="icon-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+      <symbol id="icon-cloud" viewBox="0 0 24 24"><path d="M7 18h10a4 4 0 0 0 .7-7.94A6 6 0 0 0 6.2 8.3 4.8 4.8 0 0 0 7 18Z"/><path d="m9 14 3-3 3 3M12 11v7"/></symbol>
     </svg>
 
     <header class="app-header">
@@ -38,7 +40,10 @@
           <button class="nav-button" type="button" data-target="analysis"><svg><use href="#icon-chart"></use></svg>财富研究</button>
           <button class="nav-button" type="button" data-target="accounts"><svg><use href="#icon-wallet"></use></svg>账户名录</button>
         </nav>
-        <button class="header-action" id="recordHeader" type="button"><svg><use href="#icon-calendar"></use></svg>新增档案</button>
+        <div class="header-actions">
+          <button class="cloud-account-button" id="cloudAccountButton" type="button"><i id="cloudIndicator"></i><svg><use href="#icon-user"></use></svg><span id="cloudButtonText">登录</span></button>
+          <button class="header-action" id="recordHeader" type="button"><svg><use href="#icon-calendar"></use></svg>新增档案</button>
+        </div>
       </div>
       <div class="note-colors" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
     </header>
@@ -142,7 +147,7 @@
           <button type="button" data-filter="debt">负债</button>
         </div>
         <div class="account-grid" id="accountGrid"></div>
-        <div class="account-footer"><span><i></i>数据仅保存在当前浏览器</span><button id="resetDemo" type="button">恢复示例数据</button></div>
+        <div class="account-footer"><span><i id="storageIndicator"></i><b id="storageStatus">数据仅保存在当前浏览器</b></span><button id="resetDemo" type="button">恢复示例数据</button></div>
       </section>
     </main>
 
@@ -179,7 +184,27 @@
       </form>
     </dialog>
 
+    <dialog class="modal auth-modal" id="authDialog">
+      <form id="authForm">
+        <div class="modal-head"><div><p class="page-kicker">云端账户</p><h2 id="authDialogTitle">登录财富档案</h2><span id="authDialogHelp">登录后在手机和电脑间同步资产数据</span></div><button class="icon-plain" type="button" data-close="authDialog" aria-label="关闭"><svg><use href="#icon-close"></use></svg></button></div>
+        <div class="auth-signed-out" id="authSignedOut">
+          <label><span>邮箱</span><input type="email" name="email" autocomplete="email" required placeholder="name@example.com" /></label>
+          <label><span>密码</span><input type="password" name="password" autocomplete="current-password" minlength="8" required placeholder="至少 8 位" /></label>
+          <p class="form-tip"><svg><use href="#icon-info"></use></svg>首次使用请注册；如果邮箱验证已开启，请到邮箱完成确认。</p>
+          <div class="modal-actions"><button class="secondary-button" id="registerButton" type="button">注册</button><button class="primary-button" type="submit">登录</button></div>
+        </div>
+        <div class="auth-signed-in" id="authSignedIn" hidden>
+          <div class="auth-account"><span class="auth-avatar"><svg><use href="#icon-user"></use></svg></span><div><strong id="authEmail">—</strong><small id="authHousehold">我的家庭</small></div></div>
+          <div class="sync-status"><span><i id="syncStatusDot"></i><strong id="syncStatusText">云端已连接</strong></span><small>账户与盘点档案将自动同步</small></div>
+          <div class="modal-actions"><button class="secondary-button" id="syncNowButton" type="button"><svg><use href="#icon-cloud"></use></svg>立即同步</button><button class="secondary-button danger-button" id="signOutButton" type="button">退出登录</button></div>
+        </div>
+      </form>
+    </dialog>
+
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.2/dist/umd/supabase.js"></script>
+    <script src="./cloud-config.js"></script>
+    <script src="./cloud.js"></script>
     <script src="./app.js"></script>
   </body>
 </html>

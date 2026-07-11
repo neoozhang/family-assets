@@ -43,6 +43,14 @@ svg { display: block; width: 18px; height: 18px; fill: none; stroke: currentColo
 .header-action, .primary-button, .secondary-button, .record-main-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; padding: 0 16px; border-radius: 7px; font-size: 12px; font-weight: 700; white-space: nowrap; }
 .header-action { justify-self: end; color: #fff; background: var(--note-100); border: 0; }
 .header-action:hover, .primary-button:hover { background: var(--note-100-dark); }
+.header-actions { display: flex; align-items: center; justify-self: end; gap: 8px; }
+.cloud-account-button { position: relative; display: inline-flex; min-height: 40px; padding: 0 12px; align-items: center; gap: 7px; color: #5f6672; background: #fff; border: 1px solid #dde0e5; border-radius: 7px; font-size: 11px; font-weight: 700; }
+.cloud-account-button:hover { color: var(--ink); background: #f7f8f9; }
+.cloud-account-button svg { width: 16px; height: 16px; }
+.cloud-account-button > i { position: absolute; top: 7px; right: 7px; width: 6px; height: 6px; background: #aeb3bc; border: 1px solid #fff; border-radius: 50%; }
+.cloud-account-button.is-online > i { background: #38a56a; }
+.cloud-account-button.is-syncing > i { background: #e0a23c; }
+.cloud-account-button.has-error > i { background: var(--note-100); }
 .note-colors { display: grid; grid-template-columns: 4fr 3fr 2fr 1.4fr 1fr; height: 3px; }
 .note-colors i:nth-child(1) { background: var(--note-100); }
 .note-colors i:nth-child(2) { background: var(--note-50); }
@@ -267,6 +275,7 @@ svg { display: block; width: 18px; height: 18px; fill: none; stroke: currentColo
 .account-actions button.delete:hover { color: var(--note-100); background: var(--note-100-soft); }
 .account-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; color: var(--muted); font-size: 9px; }
 .account-footer span { display: flex; align-items: center; gap: 6px; }
+.account-footer span b { font-weight: 400; }
 .account-footer i { width: 6px; height: 6px; background: var(--note-50); border-radius: 50%; }
 .account-footer button { padding: 5px 0; color: var(--muted); background: transparent; border: 0; font-size: 9px; }
 
@@ -297,6 +306,20 @@ input:focus, select:focus { border-color: var(--note-5); box-shadow: 0 0 0 3px r
 .balance-input input { padding-left: 26px; text-align: right; font-variant-numeric: tabular-nums; }
 .record-form-row.is-debt input { color: var(--note-100); }
 .modal-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 3px; }
+.auth-signed-out, .auth-signed-in { display: grid; gap: 15px; }
+.auth-signed-out[hidden], .auth-signed-in[hidden] { display: none; }
+.auth-account { display: flex; align-items: center; gap: 12px; padding: 14px; background: #f7f8f9; border-radius: 8px; }
+.auth-avatar { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; color: var(--note-100); background: var(--note-100-soft); border-radius: 50%; }
+.auth-avatar svg { width: 19px; height: 19px; }
+.auth-account div { display: grid; min-width: 0; gap: 4px; }
+.auth-account strong { overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.auth-account small { color: var(--muted); font-size: 9px; }
+.sync-status { display: grid; gap: 5px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; }
+.sync-status > span { display: flex; align-items: center; gap: 7px; }
+.sync-status i { width: 7px; height: 7px; background: #38a56a; border-radius: 50%; }
+.sync-status strong { font-size: 11px; }
+.sync-status small { color: var(--muted); font-size: 9px; }
+.danger-button { color: var(--note-100); }
 .toast { position: fixed; right: 22px; bottom: 22px; z-index: 100; max-width: 320px; padding: 11px 15px; color: #fff; background: #2a2c32; border-radius: 7px; box-shadow: var(--shadow); opacity: 0; transform: translateY(9px); pointer-events: none; transition: .2s ease; font-size: 11px; }
 .toast.is-visible { opacity: 1; transform: translateY(0); }
 .amounts-hidden .money-value, .amounts-hidden [data-money] { color: transparent !important; text-shadow: 0 0 8px rgba(49,45,49,.45); user-select: none; }
@@ -316,6 +339,10 @@ input:focus, select:focus { border-color: var(--note-5); box-shadow: 0 0 0 3px r
   .brand-seal { width: 32px; height: 32px; font-size: 17px; }
   .brand small { display: none; }
   .desktop-nav, .header-action { display: none; }
+  .header-actions { gap: 0; }
+  .cloud-account-button { width: 38px; height: 38px; min-height: 38px; padding: 0; justify-content: center; border-radius: 50%; }
+  .cloud-account-button span { display: none; }
+  .cloud-account-button > i { top: 4px; right: 3px; }
   .note-colors { height: 2px; }
   .main-content { width: calc(100% - 20px); margin: 12px auto 104px; }
   .mobile-nav { position: fixed; right: 10px; bottom: max(8px, env(safe-area-inset-bottom)); left: 10px; z-index: 40; display: grid; grid-template-columns: repeat(4, 1fr); min-height: 64px; padding: 5px 6px; background: rgba(246,247,249,.72); border: 1px solid rgba(255,255,255,.86); border-radius: 20px; box-shadow: inset 0 1px 0 rgba(255,255,255,.92), 0 12px 32px rgba(35,38,45,.16), 0 2px 8px rgba(35,38,45,.08); backdrop-filter: blur(22px) saturate(180%); -webkit-backdrop-filter: blur(22px) saturate(180%); }
@@ -332,7 +359,7 @@ input:focus, select:focus { border-color: var(--note-5); box-shadow: 0 0 0 3px r
   .modal[open] { animation: sheet-enter .24s cubic-bezier(.22,.72,.2,1) both; }
   .modal::backdrop { animation: backdrop-enter .2s ease-out both; }
   .modal form { padding: 22px 18px calc(18px + env(safe-area-inset-bottom)); }
-  .modal-actions { position: sticky; bottom: calc(-18px - env(safe-area-inset-bottom)); z-index: 2; margin: 0 -18px calc(-18px - env(safe-area-inset-bottom)); padding: 12px 18px calc(12px + env(safe-area-inset-bottom)); background: rgba(255,255,255,.96); border-top: 1px solid var(--line); backdrop-filter: blur(12px); }
+  .modal:not(.auth-modal) .modal-actions { position: sticky; bottom: calc(-18px - env(safe-area-inset-bottom)); z-index: 2; margin: 0 -18px calc(-18px - env(safe-area-inset-bottom)); padding: 12px 18px calc(12px + env(safe-area-inset-bottom)); background: rgba(255,255,255,.96); border-top: 1px solid var(--line); backdrop-filter: blur(12px); }
   .worth-hero { grid-template-columns: 1fr; min-height: 0; }
   .hero-main { padding: 20px 18px 20px; border-right: 0; }
   .hero-main::after { right: 8px; font-size: 98px; }
